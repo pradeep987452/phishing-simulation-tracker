@@ -1,0 +1,11 @@
+You are a cybersecurity expert.
+
+Based on the phishing simulation input below, provide exactly 3 recommendations.
+
+Input:
+{input}
+
+Return ONLY a JSON array with 3 objects. Each object must have:
+- action_type
+- description
+- priority (LOW, MEDIUM, HIGH)
