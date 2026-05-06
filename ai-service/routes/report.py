@@ -1,6 +1,7 @@
+import json
 from flask import Blueprint, request, jsonify
 from datetime import datetime
-from services.groq_client import generate_response
+from services.groq_client import ask_groq
 
 report_bp = Blueprint("report", __name__)
 
@@ -25,16 +26,18 @@ def generate_report():
     Content:
     {content}
 
-    Return JSON with:
+    Return ONLY valid JSON with:
     - title
     - summary
     - overview
     - key_items (array)
     - recommendations (array)
+
+    Do not use markdown.
     """
 
     # ✅ AI Call
-    response = generate_response(prompt)
+    response = ask_groq(final_prompt)
 
     # ✅ Fallback
     if not response:
@@ -48,9 +51,16 @@ def generate_report():
             "is_fallback": True
         })
 
+    # ✅ Clean response
+    cleaned = response.replace("```json", "")
+    cleaned = cleaned.replace("```", "")
+    cleaned = cleaned.strip()
+
+    report_json = json.loads(cleaned)
+
     # ✅ Final Response
     return jsonify({
-        "report": response,
+        "report": report_json,
         "generated_at": datetime.utcnow().isoformat(),
         "is_fallback": False
     })

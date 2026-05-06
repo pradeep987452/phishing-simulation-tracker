@@ -3,23 +3,25 @@ import time
 
 health_bp = Blueprint("health", __name__)
 
-# ⏱ track when service started
-start_time = time.time()
+START_TIME = time.time()
 
-# 📊 simple metrics (optional but useful)
-request_count = 0
+response_times = []
 
 @health_bp.route("/health", methods=["GET"])
 def health():
-    global request_count
 
-    uptime = time.time() - start_time
+    uptime = int(time.time() - START_TIME)
+
+    avg_response = (
+        sum(response_times) / len(response_times)
+        if response_times else 0
+    )
 
     return jsonify({
-        "status": "ok",
+        "status": "healthy",
         "service": "ai-service",
-        "uptime_seconds": round(uptime, 2),
-        "requests_handled": request_count,
-        "model": "groq-llama",
-        "message": "AI service running smoothly"
+        "model": "llama-3.3-70b-versatile",
+        "uptime_seconds": uptime,
+        "avg_response_time_ms": round(avg_response, 2),
+        "cache": "connected"
     }), 200

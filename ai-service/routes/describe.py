@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from datetime import datetime
 from pathlib import Path
 from services.groq_client import analyze_text
-from services.cache import generate_key, get_cached_response, set_cache
+from services.cache import generate_cache_key, get_cached_response, set_cached_response
 import json
 
 # ✅ DEFINE BLUEPRINT FIRST (THIS FIXES YOUR ERROR)
@@ -45,7 +45,7 @@ def describe():
         return jsonify({"error": "Text cannot be empty"}), 400
 
     # ⚡ STEP 1: Cache key
-    cache_key = generate_key(input_text)
+    cache_key = generate_cache_key(input_text)
 
     # ⚡ STEP 2: Check cache
     cached_response = get_cached_response(cache_key)
@@ -78,7 +78,7 @@ def describe():
         }
 
         # ⚡ STEP 3: Store cache
-        set_cache(cache_key, response)
+        set_cached_response(cache_key, response)
 
         return jsonify(response), 200
 
@@ -89,6 +89,6 @@ def describe():
             "is_fallback": True
         }
 
-        set_cache(cache_key, fallback_response)
+        set_cached_response(cache_key, fallback_response)
 
         return jsonify(fallback_response), 200

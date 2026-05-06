@@ -2,14 +2,37 @@ import redis
 import hashlib
 import json
 
-r = redis.Redis(host="localhost", port=6379, decode_responses=True)
+redis_client = redis.Redis(
+    host="localhost",
+    port=6379,
+    decode_responses=True
+)
 
-def generate_key(text):
+CACHE_TTL = 900  # 15 minutes
+
+
+def generate_cache_key(text):
     return hashlib.sha256(text.encode()).hexdigest()
 
-def get_cached_response(key):
-    data = r.get(key)
-    return json.loads(data) if data else None
 
-def set_cache(key, value, ttl=900):  # 15 min
-    r.setex(key, ttl, json.dumps(value))
+def get_cached_response(text):
+
+    key = generate_cache_key(text)
+
+    cached = redis_client.get(key)
+
+    if cached:
+        return json.loads(cached)
+
+    return None
+
+
+def set_cached_response(text, response):
+
+    key = generate_cache_key(text)
+
+    redis_client.setex(
+        key,
+        CACHE_TTL,
+        json.dumps(response)
+    )
