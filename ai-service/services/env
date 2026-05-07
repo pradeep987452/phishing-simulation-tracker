@@ -1,0 +1,4 @@
+GROQ_API_KEY=your_api_key_here
+REDIS_HOST=redis
+REDIS_PORT=6379
+FLASK_ENV=development

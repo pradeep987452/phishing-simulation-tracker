@@ -18,14 +18,18 @@ client = Groq(
 response_times = []
 
 
-def ask_groq(prompt):
+def ask_groq(prompt, fallback_message="AI service temporarily unavailable"):
 
     # ✅ Check Redis cache first
     cached = get_cached_response(prompt)
 
     if cached:
         print("⚡ Cache hit")
-        return cached
+
+        return {
+            "content": cached,
+            "is_fallback": False
+        }
 
     print("❌ Cache miss")
 
@@ -41,46 +45,38 @@ def ask_groq(prompt):
                 }
             ],
             temperature=0.3,
-            max_tokens=500
+            max_tokens=300,
+            timeout=10
         )
 
-        result = completion.choices[0].message.content
+        result = completion.choices[0].message.content.strip()
 
         # ✅ Track response time
-        elapsed = time.time() - start_time
+        elapsed = round(time.time() - start_time, 2)
         response_times.append(elapsed)
+
+        # keep last 20 only
+        if len(response_times) > 20:
+            response_times.pop(0)
 
         # ✅ Save to Redis
         set_cached_response(prompt, result)
 
-        print("✅ Saved to cache")
+        print(f"✅ Saved to cache ({elapsed}s)")
 
-        return result
+        return {
+            "content": result,
+            "is_fallback": False
+        }
 
     except Exception as e:
         print("Groq Error:", e)
 
-        return None
-
-
-# Optional compatibility function
-def analyze_text(prompt_template, input_text):
-
-    final_prompt = (
-        prompt_template
-        .replace("{input_text}", input_text)
-        .replace("{input}", input_text)
-    )
-
-    response = ask_groq(final_prompt)
-
-    if response:
         return {
-            "is_fallback": False,
-            "content": response.strip()
+            "content": fallback_message,
+            "is_fallback": True
         }
 
-    return {
-        "is_fallback": True,
-        "message": "AI service temporarily unavailable"
-    }
+
+def analyze_text(prompt, user_input=None, fallback_message="AI service temporarily unavailable"):
+    return ask_groq(prompt, fallback_message)

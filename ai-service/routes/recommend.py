@@ -1,55 +1,118 @@
+import json
+
 from flask import Blueprint, request, jsonify
-from services.groq_client import analyze_text
 from datetime import datetime
 from pathlib import Path
 
-recommend_bp = Blueprint('recommend', __name__)
+from services.groq_client import analyze_text
+from services.cache import (
+    generate_cache_key,
+    get_cached_response,
+    set_cached_response
+)
 
+recommend_bp = Blueprint("recommend", __name__)
+
+# 📁 Load prompt
 PROMPTS_DIR = Path(__file__).resolve().parent.parent / "prompts"
 
-def load_prompt(user_input):
-    with open(PROMPTS_DIR / "recommend_prompt.txt", "r", encoding="utf-8") as f:
-        template = f.read()
-    return template.replace("{input}", user_input)
+with open(PROMPTS_DIR / "recommend_prompt.txt", "r", encoding="utf-8") as f:
+    prompt_template = f.read()
 
 
-def parse_input_data():
-    data = request.get_json(silent=True)
-    if data is None:
-        if request.form.get("input"):
-            data = {"input": request.form.get("input")}
-        elif request.data:
-            raw_body = request.data.decode("utf-8", errors="ignore").strip()
-            if raw_body:
-                data = {"input": raw_body}
-    return data
-
-
-@recommend_bp.route('/recommend', methods=['POST'])
+@recommend_bp.route("/recommend", methods=["POST"])
 def recommend():
-    data = parse_input_data()
 
-    if not data or "input" not in data:
-        return jsonify({"error": "Input is required"}), 400
+    data = request.get_json()
 
-    user_input = data["input"].strip()
-
-    if not user_input:
-        return jsonify({"error": "Input cannot be empty"}), 400
-
-    prompt = load_prompt(user_input)
-
-    ai_result = analyze_text(prompt, user_input)
-
-    if ai_result["is_fallback"]:
+    # ✅ Validation
+    if not data or "content" not in data:
         return jsonify({
-            "is_fallback": True,
-            "recommendations": [],
-            "generated_at": datetime.utcnow().isoformat()
-        })
+            "error": "Missing 'content' field"
+        }), 400
 
-    return jsonify({
-        "is_fallback": False,
-        "recommendations": ai_result["content"],
-        "generated_at": datetime.utcnow().isoformat()
-    })
+    input_text = data["content"].strip()
+
+    if len(input_text) == 0:
+        return jsonify({
+            "error": "Content cannot be empty"
+        }), 400
+
+    # ⚡ Generate cache key
+    cache_key = generate_cache_key(input_text)
+
+    # ⚡ Check Redis cache
+    cached_response = get_cached_response(cache_key)
+
+    if cached_response:
+        print("⚡ Recommend Cache HIT")
+        return jsonify(cached_response), 200
+
+    print("🧠 Recommend Cache MISS")
+
+    try:
+
+        # 🔥 AI Call
+        result = analyze_text(
+            prompt_template,
+            input_text
+        )
+
+        clean_text = result["content"]
+
+        # ✅ Try parsing JSON
+        try:
+
+            parsed = json.loads(clean_text)
+
+            if not isinstance(parsed, list):
+                parsed = [parsed]
+
+        except Exception:
+
+            parsed = [
+                {
+                    "action_type": "general",
+                    "description": clean_text,
+                    "priority": "medium"
+                }
+            ]
+
+        response = {
+            "recommendations": parsed,
+            "generated_at": datetime.utcnow().isoformat(),
+            "is_fallback": result["is_fallback"]
+        }
+
+        # ⚡ Save cache
+        set_cached_response(
+            cache_key,
+            response
+        )
+
+        print("✅ Recommend response cached")
+
+        return jsonify(response), 200
+
+    except Exception as e:
+
+        print("Recommend Route Error:", e)
+
+        fallback_response = {
+            "recommendations": [
+                {
+                    "action_type": "fallback",
+                    "description": "Unable to generate recommendations",
+                    "priority": "low"
+                }
+            ],
+            "generated_at": datetime.utcnow().isoformat(),
+            "is_fallback": True
+        }
+
+        set_cached_response(
+            cache_key,
+            fallback_response
+        )
+
+        return jsonify(fallback_response), 200
