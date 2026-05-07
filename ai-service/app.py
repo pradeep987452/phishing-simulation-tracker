@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request
 from flask_talisman import Talisman
+from services.embedding_service import load_embedding_model
 
 # ✅ import blueprints
 from routes.describe import describe_bp
@@ -12,7 +13,12 @@ app = Flask(__name__)
 Talisman(
     app,
     content_security_policy={
-        "default-src": "'self'"
+        "default-src": "'self'",
+        "script-src": "'self'",
+        "style-src": "'self'",
+        "img-src": "'self' data:",
+        "object-src": "'none'",
+        "base-uri": "'self'"
     }
 )
 
@@ -80,4 +86,5 @@ def set_security_headers(response):
 # 🚀 run app
 if __name__ == "__main__":
     print(app.url_map)
+    load_embedding_model()
     app.run(host="0.0.0.0", port=5000, debug=True)
