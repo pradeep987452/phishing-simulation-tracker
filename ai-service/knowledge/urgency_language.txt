@@ -1,0 +1,5 @@
+Phishing emails often create a false sense of urgency.
+Attackers pressure users to act immediately without verification.
+Common phrases include "urgent action required" and "account will be suspended."
+Urgency tactics reduce the chance that victims will carefully inspect the message.
+Users should pause and verify requests before responding to urgent emails.

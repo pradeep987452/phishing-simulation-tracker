@@ -1,0 +1,5 @@
+Social engineering attacks manipulate human emotions and trust.
+Attackers may pretend to be coworkers, managers, or trusted companies.
+These attacks often exploit fear, curiosity, or authority.
+Users should independently verify suspicious requests before taking action.
+Security awareness training helps reduce social engineering risks.

@@ -1,0 +1,5 @@
+Fake invoice scams trick users into making fraudulent payments.
+Attackers often impersonate vendors or finance departments.
+These emails may contain urgent payment requests or altered bank details.
+Users should confirm invoice authenticity through trusted communication channels.
+Organizations should implement approval workflows for financial transactions.

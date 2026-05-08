@@ -1,0 +1,3 @@
+Spoofed domains mimic legitimate company websites.
+Attackers replace letters with similar characters.
+Always inspect sender email domains carefully.

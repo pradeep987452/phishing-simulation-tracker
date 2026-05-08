@@ -1,0 +1,5 @@
+Executive impersonation attacks are also known as CEO fraud or business email compromise.
+Attackers pretend to be senior executives requesting urgent actions.
+These attacks often target finance or HR employees.
+Requests for wire transfers, gift cards, or sensitive data should always be verified.
+Organizations should use multi-step verification for high-risk requests.

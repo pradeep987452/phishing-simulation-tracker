@@ -2,6 +2,8 @@ import os
 import time
 from groq import Groq
 from dotenv import load_dotenv
+from typer import prompt
+from services.chroma_service import search_knowledge
 
 from services.cache import (
     get_cached_response,
@@ -33,6 +35,19 @@ def ask_groq(prompt, fallback_message="AI service temporarily unavailable"):
 
     print("❌ Cache miss")
 
+    # ✅ Search knowledge from ChromaDB
+    knowledge = search_knowledge(prompt)
+
+    context = "\n".join(knowledge)
+
+    final_prompt = f"""
+Context:
+{context}
+
+User Input:
+{prompt}
+"""
+
     start_time = time.time()
 
     try:
@@ -41,7 +56,7 @@ def ask_groq(prompt, fallback_message="AI service temporarily unavailable"):
             messages=[
                 {
                     "role": "user",
-                    "content": prompt
+                    "content": final_prompt
                 }
             ],
             temperature=0.3,

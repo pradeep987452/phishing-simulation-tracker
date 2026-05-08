@@ -1,0 +1,5 @@
+Users should verify sender identities before responding to emails.
+Strong passwords and multi-factor authentication improve account security.
+Software and operating systems should be updated regularly.
+Employees should report suspicious emails to the security team immediately.
+Security awareness training reduces the likelihood of phishing success.

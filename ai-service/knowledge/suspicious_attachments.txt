@@ -1,0 +1,5 @@
+Phishing emails frequently include malicious attachments.
+Dangerous file types include .exe, .zip, .scr, and macro-enabled Office documents.
+Attackers may disguise malware as invoices, reports, or delivery documents.
+Users should avoid opening unexpected attachments from unknown senders.
+Antivirus and email scanning tools help detect malicious files.
